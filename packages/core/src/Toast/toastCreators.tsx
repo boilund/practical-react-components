@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import styled, { css } from 'styled-components'
 
+import { Tooltip } from 'practical-react-components-core'
 import {
   CheckIcon,
   AlertIcon,
@@ -54,6 +55,54 @@ const ToastLabel = styled(Typography).attrs({ variant: 'chip-tag-text' })<{
         `}
 `
 
+interface WithTooltipProps {
+  readonly showTooltip: boolean
+  readonly text: string
+}
+
+const WithTooltip: React.FC<WithTooltipProps> = ({
+  showTooltip,
+  text,
+  children,
+}) => {
+  if (showTooltip) {
+    return <Tooltip text={text}>{children}</Tooltip>
+  }
+  return <>{children}</>
+}
+
+interface ToastLabelWithTooltipProps {
+  readonly label: string
+  readonly hasCloseButton: boolean
+  readonly isError: boolean
+  readonly hasEmphasis: boolean
+}
+
+const ToastLabelWithTooltip: React.FC<ToastLabelWithTooltipProps> = ({
+  label,
+  ...rest
+}) => {
+  const [hasOverflow, setHasOverflow] = useState(false)
+  const typographyRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (typographyRef.current === null) {
+      return
+    }
+    setHasOverflow(
+      typographyRef.current.offsetHeight < typographyRef.current.scrollHeight ||
+        typographyRef.current.offsetWidth < typographyRef.current.scrollWidth
+    )
+  }, [typographyRef, label])
+
+  return (
+    <WithTooltip showTooltip={hasOverflow} text={label}>
+      <ToastLabel ref={typographyRef} {...rest}>
+        {label}
+      </ToastLabel>
+    </WithTooltip>
+  )
+}
+
 const IconWrapper = styled.div`
   height: ${iconSize.medium};
   width: ${iconSize.medium};
@@ -104,13 +153,12 @@ export const createSuccessToast: SimpleToastCreator = ({
   ...rest
 }) => {
   const labelComponent = (
-    <ToastLabel
+    <ToastLabelWithTooltip
       hasCloseButton={false}
       isError={false}
       hasEmphasis={message !== undefined}
-    >
-      {label}
-    </ToastLabel>
+      label={label}
+    />
   )
   const icon = (
     <SuccessNotificationIconColor>
@@ -140,13 +188,12 @@ export const createErrorToast: SimpleToastCreator = ({
   ...rest
 }) => {
   const labelComponent = (
-    <ToastLabel
+    <ToastLabelWithTooltip
       hasCloseButton={true}
       isError={true}
       hasEmphasis={message !== undefined}
-    >
-      {label}
-    </ToastLabel>
+      label={label}
+    />
   )
   const icon = (
     <ErrorIconColor>
@@ -175,13 +222,12 @@ export const createWarningToast: SimpleToastCreator = ({
   ...rest
 }) => {
   const labelComponent = (
-    <ToastLabel
+    <ToastLabelWithTooltip
       hasCloseButton={true}
       isError={false}
       hasEmphasis={message !== undefined}
-    >
-      {label}
-    </ToastLabel>
+      label={label}
+    />
   )
   const icon = (
     <WarningIconColor>
@@ -210,13 +256,12 @@ export const createInfoToast: SimpleToastCreator = ({
   ...rest
 }) => {
   const labelComponent = (
-    <ToastLabel
+    <ToastLabelWithTooltip
       hasCloseButton={true}
       isError={false}
       hasEmphasis={message !== undefined}
-    >
-      {label}
-    </ToastLabel>
+      label={label}
+    />
   )
   const icon = (
     <InfoIconColor>
@@ -255,9 +300,12 @@ export const createActionToast: ActionToastCreator = ({
 }) => {
   const labelComponent = (
     <>
-      <ToastLabel hasCloseButton={true} isError={false} hasEmphasis={false}>
-        {label}
-      </ToastLabel>
+      <ToastLabelWithTooltip
+        hasCloseButton={true}
+        isError={false}
+        hasEmphasis={false}
+        label={label}
+      />
       <LinkWrapper>
         <Link {...action.link}>{action.text}</Link>
       </LinkWrapper>
@@ -294,13 +342,12 @@ export const createLoadingToast: SimpleToastCreator = ({
   ...rest
 }) => {
   const labelComponent = (
-    <ToastLabel
+    <ToastLabelWithTooltip
       hasCloseButton={true}
       isError={false}
       hasEmphasis={message !== undefined}
-    >
-      {label}
-    </ToastLabel>
+      label={label}
+    />
   )
   const icon = (
     <LoadingIconSize>
@@ -337,13 +384,12 @@ export const createProgressToast: ProgressToastCreator = ({
 }) => {
   const labelComponent = (
     <>
-      <ToastLabel
+      <ToastLabelWithTooltip
         hasCloseButton={true}
         isError={false}
         hasEmphasis={message !== undefined}
-      >
-        {label}
-      </ToastLabel>
+        label={label}
+      />
       <ProgressWrapper>
         <Progress {...progress} />
       </ProgressWrapper>
